@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="{{ niepce.language }}" data-theme="{{ niepce.theme_variant }}">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{{ title or niepce.title }}</title>
+		<meta name="description" content="{{ description or niepce.description }}">
+		<link rel="alternate" href="/feeds/posts.xml" type="application/atom+xml" title="{{ niepce.title }}">
+		<meta name="generator" content="{{ eleventy.generator }}">
+		{% set theme %}public/css/{{ niepce.theme }}.css{% endset %}
+		{%- css %}
+      @import url(../css/github-colors-light.css);
+      @import url(../css/github-colors-dark-media.css);
+      @import url(../css/github-base.css);
+
+      {% include theme %}
+    {% endcss %}
+		<link rel="stylesheet" href="{% getBundleFileUrl "css" %}">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		{% if (niepce.grid === 'masonry') or (grid === 'masonry') %}
+		<script src="/js/magic-grid.min.js" defer fetchpriority="high"></script>
+		{% endif %}
+		<script src="/js/script.js" defer fetchpriority="high"></script>
+
+  	{# Opengraph #}
+  	{% if photo %}
+		<meta property="og:site_name" content="{{ niepce.title }}" />
+		<meta property="og:type" content="article" />
+		<meta property="og:title" content="{{ title }}" />
+		<meta property="og:description" content="{{ page.content }}" />
+		<meta
+			property="og:url"
+			content="{{ niepce.url }}{{ page.url | htmlBaseUrl }}"
+		/>
+		<meta property="og:image" content="{{ photo | getOGImageURL | absoluteUrl(niepce.url) }}" />
+		<meta property="og:locale" content="{{niepce.locale}}" />
+		<meta
+			property="article:published_time"
+			content="{{ date | htmlDateString }}"
+		/>
+		{%- for tag in tags | filterTagList %}
+		<meta property="article:tag" content="{{ tag }}" />
+		{% endfor %}
+		<meta property="og:image:width" content="2000" />
+		<meta property="og:image:height" content="1333" />
+  	{% else %}
+		<meta property="og:site_name" content="{{ niepce.title }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ niepce.title }}">
+    <meta property="og:description" content="{{ niepce.description }}">
+    <meta property="og:url" content="{{ niepce.url }}">
+		{% if niepce.social_banner %}
+    <meta property="og:image" content="{{ niepce.url }}{{ niepce.social_banner}}">
+    <meta property="og:image:width" content="1000">
+    <meta property="og:image:height" content="483">
+		{% endif %}
+    <meta property="og:locale" content="{{ niepce.locale }}">
+		{% endif %}
+	</head>
+	<body class="{% if niepce.animations %}animated{% endif %}">
+		{% svgsprite %}
+		<div class="skip">
+			<a href="#skip">Skip to main content</a>
+		</div>
+
+		<div class="main{% if home and niepce.splash.enabled %} splash{% endif %}">
+			<header class="sidebar">
+				<a href="/" class="logo">
+					{% if niepce.logo %}
+					{% if '-inline.svg' in niepce.logo %}
+					{{ niepce.logo | svgContents | safe }}
+					{% else %}
+					<img src="{{ niepce.logo }}" alt="{{ niepce.title }}">
+					{% endif %}
+					{% else %}
+					{{ niepce.title }}
+					{% endif %}
+				</a>
+				<button class="menu" type="button">
+					{% svg "burger" %}
+				</button>
+				<nav class="nav">
+          {% set navPages = collections.all | eleventyNavigation %}
+          {% macro renderNavListItem(entry) -%}
+          <li class="nav-item">
+            <a href="{{ entry.url }}" {% if entry.url == page.url %} aria-current="page"{% endif %}>{{ entry.title }}</a>
+          {%- if entry.children.length -%}
+            <ul class="tags-list">
+              {%- for child in entry.children %}{{ renderNavListItem(child) }}{% endfor -%}
+            </ul>
+          {%- endif -%}
+          </li>
+          {%- endmacro %}
+          <ul>
+          {%- for entry in navPages %}{{ renderNavListItem(entry) }}{%- endfor -%}
+          </ul>
+          {%- set footer = "./content/pages/include_footer.md" -%}
+          {% if footer | fsExists %}
+          <div class="footer">
+            {% renderFile footer %}
+          </div>
+          {% endif %}
+				</nav>
+				<ul class="network">
+					<li>
+						<a class="icon-only" href="/feeds/posts.xml" title="RSS feed" aria-label="RSS feed">
+							{% svg "rss", "network-icon" %}
+						</a>
+					</li>
+					{% for social, url in niepce.socials %}
+					{% if url %}
+					<li>
+						<a class="icon-only" href="{{ url }}" title="{{ social | capitalize }}" aria-label="{{ social | capitalize }}">
+							{% svg social, "network-icon" %}
+						</a>
+					</li>
+	      	{% endif %}
+	      	{% endfor %}
+	      </ul>
+			</header>
+
+			<main class="content" id="skip">
+				{{ content | safe }}
+			</main>
+		</div>
+	</body>
+</html>
